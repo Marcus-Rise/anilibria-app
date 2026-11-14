@@ -30,10 +30,14 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Create disposable signing key
+        run: |
+          keytool -genkeypair -keystore "$RUNNER_TEMP/test.jks" -alias aniliberty-tv -keyalg RSA -keysize 2048 -validity 1 -storepass test-password -keypass test-password -dname "CN=Disposable CI test"
+          echo "TEST_KEYSTORE=$(base64 -w 0 "$RUNNER_TEMP/test.jks")" >> "$GITHUB_ENV"
       - name: Configure optional signing
         env:
-          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEYSTORE: ${{ env.TEST_KEYSTORE }}
+          PASSWORD: test-password
         run: |
           if [ -n "$KEYSTORE" ] && [ -n "$PASSWORD" ]; then
             printf '%s' "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/release.jks"
@@ -46,10 +50,12 @@ jobs:
           fi
       - name: Build TV release APK
         env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: test-password
         run: ./gradlew :app-tv:copyAppReleaseApk
+      - name: Verify test signature
+        run: "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose release-apks/*.apk
       - uses: actions/upload-artifact@v7
         with:
-          name: android-tv-release
+          name: disposable-signature-test
           path: release-apks/*.apk
           if-no-files-found: error
