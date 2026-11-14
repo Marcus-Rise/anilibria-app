@@ -26,7 +26,7 @@ class SuggestionsContentProvider : ContentProvider() {
             SearchManager.SUGGEST_COLUMN_INTENT_ACTION,
             SearchManager.SUGGEST_COLUMN_INTENT_DATA_ID
         )
-        private const val AUTHORITY = "ru.radiationx.anilibria.contentprovider.suggestions"
+        private const val AUTHORITY = "ru.radiationx.anilibria.testprovider.suggestions"
         private const val SEARCH_SUGGEST = 1
     }
 
